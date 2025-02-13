@@ -1,24 +1,26 @@
 import { ErrorMessages } from "@/utils/types";
-import { errorHandle, getUserHeaders, shouldPlatformFetch } from "@/utils/base";
+import { errorHandle, getUserHeaders } from "@/utils/base";
 import { NextRequest } from "next/server";
-import {
-  resolveUniversalHandle,
-  resolveUniversalParams,
-} from "../../profile/[handle]/utils";
+import { resolveUniversalHandle } from "../../profile/[handle]/utils";
+import { resolveUniversalParams } from "@/utils/utils";
+import { PlatformType } from "@/utils/platform";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const headers = getUserHeaders(req);
   const handle = searchParams.get("handle") || "";
-  const { identity, platform } = resolveUniversalParams(handle);
-  if (!identity || !platform || !shouldPlatformFetch(platform)) {
+  const id = resolveUniversalParams([handle])[0];
+  if (!id) {
     return errorHandle({
-      identity: identity,
+      identity: handle,
       code: 404,
-      platform: platform || "universal",
+      platform: "universal",
       message: ErrorMessages.invalidIdentity,
     });
   }
+  const platform = id.split(",")[0] as PlatformType;
+  const identity = id.split(",")[1];
+
   return await resolveUniversalHandle(identity, platform, headers, true);
 }
 export const runtime = "edge";

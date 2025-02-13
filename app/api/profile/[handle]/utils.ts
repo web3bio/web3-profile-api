@@ -222,26 +222,3 @@ export const resolveUniversalHandle = async (
   }
 };
 
-export const resolveUniversalParams = (handle: string) => {
-  let platform = "" as PlatformType,
-    identity = handle;
-  if (!handle || ![0, 1].includes(handle?.split(",")?.length - 1))
-    return {
-      identity,
-      platform,
-    };
-  if (handle.includes(",")) {
-    platform = handle.split(",")[0] as PlatformType;
-    identity = handle.split(",")[1];
-  } else {
-    identity = handle;
-    platform = handleSearchPlatform(identity);
-  }
-  identity = [regexSolana, regexBtc].some((x) => x.test(identity))
-    ? identity
-    : identity.toLowerCase();
-  return {
-    identity,
-    platform,
-  };
-};

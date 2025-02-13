@@ -1,8 +1,12 @@
 import {
   errorHandle,
   formatText,
+  handleSearchPlatform,
   isValidEthereumAddress,
+  prettify,
   respondWithCache,
+  shouldPlatformFetch,
+  uglify,
 } from "@/utils/base";
 import {
   getLensDefaultAvatar,
@@ -21,7 +25,7 @@ import {
 } from "@/utils/types";
 import { GET_PROFILES, queryIdentityGraph } from "@/utils/query";
 import { SourceType } from "./source";
-import { regexTwitterLink } from "@/utils/regexp";
+import { regexBtc, regexSolana, regexTwitterLink } from "@/utils/regexp";
 
 const UD_ACCOUNTS_LIST = [
   PlatformType.twitter,
@@ -347,4 +351,40 @@ export const resolveVerifiedLink = (
       if (!res.includes(source as SourceType)) res.push(source as SourceType);
     });
   return res;
+};
+
+export const resolveUniversalParams = (ids: string[]) => {
+  const res = new Array();
+  ids.forEach((x) => {
+    if (!x || ![0, 1].includes(x?.split(",")?.length - 1)) {
+      res.push({
+        platform: null,
+        identity: null,
+      });
+    } else {
+      if (x.includes(",")) {
+        res.push({
+          platform: x.split(",")[0],
+          identity: x.split(",")[1],
+        });
+      } else {
+        res.push({
+          platform: handleSearchPlatform(x),
+          identity: [regexSolana, regexBtc].some((i) => i.test(x))
+            ? x
+            : prettify(x).toLowerCase(),
+        });
+      }
+    }
+  });
+  return res
+    .filter((x) => shouldPlatformFetch(x.platform) && !!x.identity)
+    .map(
+      (x) =>
+        `${x.platform as PlatformType},${
+          [PlatformType.twitter, PlatformType.farcaster].includes(x.platform)
+            ? x.identity
+            : uglify(x.identity, x.platform)
+        }`
+    );
 };

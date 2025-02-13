@@ -1,6 +1,7 @@
 import { errorHandle, respondWithCache } from "@/utils/base";
 import { AuthHeaders, ErrorMessages } from "@/utils/types";
-import { fetchUniversalBatch, filterIds } from "../../[ids]/utils";
+import { fetchUniversalBatch } from "../../[ids]/utils";
+import { resolveUniversalParams } from "@/utils/utils";
 
 export const handleUniversalBatchRequest = async (
   ids: string[],
@@ -15,7 +16,7 @@ export const handleUniversalBatchRequest = async (
       message: ErrorMessages.invalidIdentity,
     });
   try {
-    const queryIds = filterIds(ids, true);
+    const queryIds = resolveUniversalParams(ids);
     const json = (await fetchUniversalBatch(queryIds, ns, headers)) as any;
 
     if (json.code) {
